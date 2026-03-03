@@ -1,0 +1,101 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Outfit:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: 'Outfit', sans-serif;
+  --font-display: 'Outfit', sans-serif;
+  --font-arabic: 'Cairo', sans-serif;
+
+  /* Air Bliss Rebranding - Logo Colors (Deep Red & Cream) */
+  --background: 40 33% 98%; /* Creamy White */
+  --foreground: 20 30% 15%; /* Deep Coffee Brown */
+  
+  /* Deep Maroon Red (from logo) */
+  --primary: 0 65% 35%;
+  --primary-foreground: 0 0% 100%;
+  
+  /* Warm Tan / Gold Accent */
+  --accent: 35 40% 50%;
+  --accent-foreground: 0 0% 100%;
+  
+  --secondary: 40 20% 94%;
+  --secondary-foreground: 20 30% 20%;
+  
+  --muted: 40 10% 94%;
+  --muted-foreground: 20 10% 45%;
+  
+  --card: 0 0% 100%;
+  --card-foreground: 20 30% 15%;
+  
+  --border: 35 15% 88%;
+  --input: 35 15% 88%;
+  --ring: 0 65% 35%;
+  
+  --radius: 0.75rem;
+  /* Soft shadows and transitions */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}
+
+[dir="rtl"] {
+  --font-sans: 'Cairo', sans-serif;
+  --font-display: 'Cairo', sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
+    font-family: var(--font-sans);
+    letter-spacing: -0.01em;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    @apply font-bold tracking-tight text-foreground;
+  }
+}
+
+@layer components {
+  .btn-pro {
+    @apply inline-flex items-center justify-center rounded-full font-bold transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-lg;
+  }
+  
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .shadow-soft {
+    box-shadow: 0 20px 40px -15px rgba(0,0,0,0.05);
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-border rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/50;
+}
