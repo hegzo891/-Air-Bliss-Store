@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 
 export function FloatingWhatsApp() {
   const openWhatsApp = () => {
-    window.open("https://wa.me/201000000000?text=Hello%20Air%20Bliss,%20I%20have%20an%20inquiry.", "_blank");
+    window.open("https://wa.me/201060435457?text=Hello%20Air%20Bliss,%20I%20have%20an%20inquiry.", "_blank");
   };
 
   return (

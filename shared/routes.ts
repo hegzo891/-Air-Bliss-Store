@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertProductSchema, products, orders, orderItems } from './schema';
+import { insertProductSchema, products, orders, orderItems, type ProductWithInventory } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -128,7 +128,7 @@ export function buildUrl(path: string, params?: Record<string, string | number>)
   return url;
 }
 
-export type ProductResponse = z.infer<typeof api.products.get.responses[200]>;
-export type ProductsListResponse = z.infer<typeof api.products.list.responses[200]>;
+export type ProductResponse = ProductWithInventory;
+export type ProductsListResponse = ProductWithInventory[];
 export type OrderInput = z.infer<typeof api.orders.create.input>;
 export type OrderResponse = z.infer<typeof api.orders.create.responses[201]>;

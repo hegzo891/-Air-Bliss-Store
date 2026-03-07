@@ -176,6 +176,10 @@ export type Product = typeof products.$inferSelect;
 export type Order = typeof orders.$inferSelect;
 export type OrderItem = typeof orderItems.$inferSelect;
 
+export type ProductWithInventory = Product & {
+  quantityAvailable: number;
+};
+
 export type OrderWithItems = Order & {
   user: User;
   items: (OrderItem & { product: Product })[];

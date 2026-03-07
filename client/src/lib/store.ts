@@ -93,18 +93,23 @@ export const useAppStore = create<AppState>()(
       setCartOpen: (isCartOpen) => set({ isCartOpen }),
 
       addToCart: (product, price, quantity = 1) => set((state) => {
+        const available = product.quantityAvailable ?? 0;
+        if (available <= 0) return state; // sold out, refuse to add
+
         const existing = state.cart.find(item => item.product.id === product.id);
         if (existing) {
+          const newQty = Math.min(existing.quantity + quantity, available);
           return {
             cart: state.cart.map(item =>
               (item.product.id === product.id)
-                ? { ...item, quantity: item.quantity + quantity }
+                ? { ...item, quantity: newQty }
                 : item
             ),
             isCartOpen: true
           };
         }
-        return { cart: [...state.cart, { product, price, quantity }], isCartOpen: true };
+        const cappedQty = Math.min(quantity, available);
+        return { cart: [...state.cart, { product, price, quantity: cappedQty }], isCartOpen: true };
       }),
 
       removeFromCart: (productId) => set((state) => ({
@@ -112,9 +117,13 @@ export const useAppStore = create<AppState>()(
       })),
 
       updateQuantity: (productId, quantity) => set((state) => ({
-        cart: state.cart.map(item =>
-          (item.product.id === productId) ? { ...item, quantity: Math.max(1, quantity) } : item
-        )
+        cart: state.cart.map(item => {
+          if (item.product.id === productId) {
+            const maxQty = item.product.quantityAvailable ?? Infinity;
+            return { ...item, quantity: Math.max(1, Math.min(quantity, maxQty)) };
+          }
+          return item;
+        })
       })),
 
       clearCart: () => set({ cart: [] }),

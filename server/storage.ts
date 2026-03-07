@@ -3,11 +3,12 @@ import {
   products, orders, orderItems, users, inventory, inventoryLogs,
   type User,
   type Product,
+  type ProductWithInventory,
   type Order,
   type OrderItem,
   type OrderWithItems,
 } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { sendTelegramMessage } from "./telegramService";
 
 export interface IStorage {
@@ -17,8 +18,8 @@ export interface IStorage {
   createUser(user: any): Promise<User>;
 
   // Products
-  getProducts(filters?: { scentType?: string }): Promise<Product[]>;
-  getProduct(id: number): Promise<Product | undefined>;
+  getProducts(filters?: { scentType?: string }): Promise<ProductWithInventory[]>;
+  getProduct(id: number): Promise<ProductWithInventory | undefined>;
   createProduct(product: Partial<Product> & { initialQuantity?: number }, adminId: number): Promise<Product>;
   updateProduct(id: number, product: Partial<Product>): Promise<Product | undefined>;
   deleteProduct(id: number): Promise<boolean>;
@@ -52,13 +53,28 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getProducts(filters?: { scentType?: string }): Promise<Product[]> {
-    let query = db.select().from(products);
+  async getProducts(filters?: { scentType?: string }): Promise<ProductWithInventory[]> {
     const conditions = [];
 
     if (filters?.scentType && filters.scentType !== 'all') {
       conditions.push(eq(products.scentType, filters.scentType));
     }
+
+    const query = db
+      .select({
+        id: products.id,
+        name: products.name,
+        description: products.description,
+        price: products.price,
+        scentType: products.scentType,
+        isActive: products.isActive,
+        imageUrl: products.imageUrl,
+        isBestSeller: products.isBestSeller,
+        createdAt: products.createdAt,
+        quantityAvailable: sql<number>`COALESCE(${inventory.quantityAvailable}, 0)`.as('quantity_available'),
+      })
+      .from(products)
+      .leftJoin(inventory, eq(products.id, inventory.productId));
 
     if (conditions.length > 0) {
       return await query.where(and(...conditions));
@@ -67,8 +83,23 @@ export class DatabaseStorage implements IStorage {
     return await query;
   }
 
-  async getProduct(id: number): Promise<Product | undefined> {
-    const [product] = await db.select().from(products).where(eq(products.id, id));
+  async getProduct(id: number): Promise<ProductWithInventory | undefined> {
+    const [product] = await db
+      .select({
+        id: products.id,
+        name: products.name,
+        description: products.description,
+        price: products.price,
+        scentType: products.scentType,
+        isActive: products.isActive,
+        imageUrl: products.imageUrl,
+        isBestSeller: products.isBestSeller,
+        createdAt: products.createdAt,
+        quantityAvailable: sql<number>`COALESCE(${inventory.quantityAvailable}, 0)`.as('quantity_available'),
+      })
+      .from(products)
+      .leftJoin(inventory, eq(products.id, inventory.productId))
+      .where(eq(products.id, id));
     return product;
   }
 
@@ -172,10 +203,16 @@ export class DatabaseStorage implements IStorage {
         }).returning();
 
         if (data.items.length > 0) {
-          // Verify all products exist
+          // Verify all products exist and have sufficient stock
           for (const item of data.items) {
             const [product] = await tx.select().from(products).where(eq(products.id, item.productId));
             if (!product) throw new Error(`Product ID ${item.productId} not found.`);
+
+            const [inv] = await tx.select().from(inventory).where(eq(inventory.productId, item.productId));
+            const available = inv?.quantityAvailable ?? 0;
+            if (available < item.quantity) {
+              throw new Error(`"${product.name}" is sold out or has insufficient stock.`);
+            }
           }
 
           const orderItemsToInsert = data.items.map(item => ({
